@@ -1,14 +1,24 @@
+/**
+ * Assignment 4a-c on 2/26/25
+ * @author Ray/
+ */
 import org.json.JSONArray;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 
-public class GitHubUserFetcher {
-
-    // Function used to fetch repository names and counts their commits.
-    public static void fetchGitHubRespository(String userID) {
-        // Allows parsing an invalid JSON response to handle errors rather than system crash silently.
+/**
+ * This class retrieves a user's GitHub from the site and displays their name and commits.
+ */
+public class GitHubAPI {
+    public static void main(String[] args) {
+        String userID = "Gamarayz";
+        fetchGitHubRepository(userID);
+    }
+    public static void fetchGitHubRepository(String userID) {
         try {
             String repoURL = "https://api.github.com/users/" + userID + "/repos";
             JSONArray repoFetchArray = fetchJSONArrayFromRepoURL(repoURL);
@@ -18,21 +28,20 @@ public class GitHubUserFetcher {
                 System.out.print("There's been an error fetching the repositories.");
                 return;
             }
-            // Looking for the length of returned list.
+
             for (int i = 0; i < repoFetchArray.length(); i++) {
                 String repoFetchName = repoFetchArray.getJSONObject(i).getString("Name");
                 int countCommit = getCountCommit(userID, repoFetchName);
                 System.out.println("Repository: " + repoFetchName + "Number of user commits: " + countCommit);
             }
-        // Used to catch exceptions from network errors and help prevent crashing.
-        } catch (Exception e) { //Throws exception.
+        } catch (Exception e) {
             System.out.println("Error: " + e.getMessage());
         }
     }
-    // Function helper to fetch the JSON array from any URL. Easily extract data.
+
     private static JSONArray fetchJSONArrayFromRepoURL(String urlAPI) {
         try {
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            HttpURLConnection connection = (HttpURLConnection) urlAPI.openConnection();
             connection.setRequestMethod("GET");
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -42,28 +51,22 @@ public class GitHubUserFetcher {
                 response.append(line);
             }
             reader.close();
-            // Converting JSON string into JSONArray with raw JSON response string to an object in JSONArray.
-            return new JSONArray (response.toString()); // Converts StringBuilder (API response) to a string.
-        } catch (Exception e) { // Throws exception.
-            return null; // Return null if error.
+
+            return new JSONArray (response.toString());
+        } catch (Exception e) {
+            return null;
         }
     }
-    // Function to gather repo count of commits.
     private static int getCountCommit(String userID, String repoFetchName) {
         try {
             // Using URI to construct the commit API URL.
             URI countCommitURI = new URI("https", "api.github.com", "/repos/" + userID + "/" + repoFetchName + "/commits", null);
-            URI countCommitURL = countCommitURI.toURL();
-            // Fetch list of user commits as a JSON Array.
+            URL countCommitURL = countCommitURI.toURL();
+
             JSONArray commitArray = fetchJSONArrayFromRepoURL(countCommitURL);
             return (commitArray != null) ? commitArray.length() : 0;
-        } catch (Exception e) { // Throws exception.
+        } catch (Exception e) {
             return 0;
         }
     }
-}
-
-public static void main(String[] args) {
-    String userID = "Gamarayz"; // Provided user example.
-    fetchGitHubRepository(userID); // Fetch and display repo name with commit count.
 }
