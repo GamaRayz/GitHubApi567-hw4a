@@ -16,32 +16,42 @@ import java.net.URL;
 public class GitHubAPI {
     public static void main(String[] args) {
         String userID = "Gamarayz";
-        fetchGitHubRepository(userID);
-    }
-    public static void fetchGitHubRepository(String userID) {
-        try {
-            String repoURL = "https://api.github.com/users/" + userID + "/repos";
-            JSONArray repoFetchArray = fetchJSONArrayFromRepoURL(repoURL);
+        JSONArray repoFetchArray = fetchGitHubRepository(userID);
 
-            // If there is an issue or error, the system will print as such.
-            if (repoFetchArray == null) {
-                System.out.print("There's been an error fetching the repositories.");
-                return;
-            }
+        if (repoFetchArray == null) {
+            System.out.print("There's been an error fetching the repositories.");
+            return;
+        }
 
-            for (int i = 0; i < repoFetchArray.length(); i++) {
-                String repoFetchName = repoFetchArray.getJSONObject(i).getString("Name");
-                int countCommit = getCountCommit(userID, repoFetchName);
-                System.out.println("Repository: " + repoFetchName + "Number of user commits: " + countCommit);
-            }
-        } catch (Exception e) {
-            System.out.println("Error: " + e.getMessage());
+        for (int i = 0; i < repoFetchArray.length(); i++) {
+            String repoFetchName = repoFetchArray.getJSONObject(i).getString("name");
+            int countCommit = getCountCommit(userID, repoFetchName);
+            System.out.println("Repository: " + repoFetchName + "Number of user commits: " + countCommit);
         }
     }
 
+    public static JSONArray fetchGitHubRepository(String userID) {
+        try {
+            String repoURL = "https://api.github.com/users/" + userID + "/repos";
+            return fetchJSONArrayFromRepoURL(repoURL);
+            } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+            return null;
+            }
+        }
+
     private static JSONArray fetchJSONArrayFromRepoURL(String urlAPI) {
         try {
-            HttpURLConnection connection = (HttpURLConnection) urlAPI.openConnection();
+            URL url = new URL(urlAPI);
+            return fetchJSONArrayFromRepoURL(url);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static JSONArray fetchJSONArrayFromRepoURL(URL url) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
@@ -52,14 +62,13 @@ public class GitHubAPI {
             }
             reader.close();
 
-            return new JSONArray (response.toString());
+            return new JSONArray(response.toString());
         } catch (Exception e) {
             return null;
         }
     }
-    private static int getCountCommit(String userID, String repoFetchName) {
+    public static int getCountCommit(String userID, String repoFetchName) {
         try {
-            // Using URI to construct the commit API URL.
             URI countCommitURI = new URI("https", "api.github.com", "/repos/" + userID + "/" + repoFetchName + "/commits", null);
             URL countCommitURL = countCommitURI.toURL();
 
